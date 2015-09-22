@@ -17,14 +17,29 @@ var knownOptions = {
 var options = minimist( process.argv.slice( 2 ), knownOptions );
 options.branch = undefined == options.branch ? 'develop' : options.branch;
 
+console.log(options);
+
+gulp.task( 'show-process', function() {
+
+  // console.log(process);
+
+});
+
+gulp.task( 'show-os', function() {
+
+  // console.log(os);
+
+});
 
 gulp.task( 'check', function() {
-  console.log( "Running on " + os.hostname() );
-  console.log( options );
-  /*if( os.hostname != 'TRLIVEBUILDER' ) {
-    console.log( "NON SEI SULLA MACCHINA PONTE!");
-    return false;
-  }*/
+
+  // console.log( "Running on " + os.hostname() );
+  // console.log( options );
+  
+  // if( os.hostname != 'TRLIVEBUILDER' ) {
+  //   console.log( "NON SEI SULLA MACCHINA PONTE!");
+  //   return false;
+  // }
   
   // if( options.env == "production" ) {
   //  fs.createReadStream('.env.prod').pipe( fs.createWriteStream('.env') );
@@ -65,6 +80,8 @@ gulp.task('sync', function() {
 
 });
 
+gulp.task( 'stamp-process', [ 'show-process' ] );
+gulp.task( 'stamp-os', [ 'show-os' ] );
 gulp.task( 'pull', [ 'git-pull' ] );
 gulp.task( 'compile', [ 'check', 'clean', 'cssmin' ] );
 gulp.task( 'deploy', [ 'check', 'clean', 'cssmin', 'sync' ] );
