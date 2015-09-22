@@ -1,3 +1,8 @@
+// compilare sass | less + prefix + minify + spostare in dist
+// concatenare js + prefix + uglify + spostare in dist
+// ottimizzare img
+// deploy in base all'ambiente corrente con controlli
+
 var gulp = require('gulp');
 var os   = require('os');
 var gulpif = require('gulp-if');
@@ -8,6 +13,11 @@ var del = require('del');
 var fs = require('fs');
 var rsync = require('gulp-rsync');
 var git = require('gulp-git');
+var rename = require('gulp-rename');
+var sass = require('gulp-sass');
+
+
+
 
 var knownOptions = {
   string: 'env',
@@ -17,19 +27,8 @@ var knownOptions = {
 var options = minimist( process.argv.slice( 2 ), knownOptions );
 options.branch = undefined == options.branch ? 'develop' : options.branch;
 
-console.log(options);
 
-gulp.task( 'show-process', function() {
 
-  // console.log(process);
-
-});
-
-gulp.task( 'show-os', function() {
-
-  // console.log(os);
-
-});
 
 gulp.task( 'check', function() {
 
@@ -60,7 +59,7 @@ gulp.task( 'clean', ['check'], function () {
 gulp.task( 'cssmin', ['clean'], function() {
 
   return gulp.src( 'source/css/*.css' )
-    .pipe(minifyCss()) // only minify in production
+    .pipe(gulpif( options.env == "production", minifyCss() )) // only minify in production
     .pipe(gulp.dest('css'));
 });
 
@@ -80,8 +79,6 @@ gulp.task('sync', function() {
 
 });
 
-gulp.task( 'stamp-process', [ 'show-process' ] );
-gulp.task( 'stamp-os', [ 'show-os' ] );
 gulp.task( 'pull', [ 'git-pull' ] );
 gulp.task( 'compile', [ 'check', 'clean', 'cssmin' ] );
 gulp.task( 'deploy', [ 'check', 'clean', 'cssmin', 'sync' ] );
