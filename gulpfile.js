@@ -1,8 +1,8 @@
 /**
  * Opzioni disponibili:
  *
- * --env: string - Definisce l'ambiente di deploy - Default: staging
- * --branch: string - Definisce il branch di git - Default: develop
+ * --env: string - Definisce l'ambiente di deploy - Default: staging - Valori accettati: staging | prod
+ * --branch: string - Definisce il branch di git - Default: develop - Valori accettati: master | develop
  * --debug: boolean - Se settato, la console stamperà degli elementi di controllo -  Default: false
  * --nodry: boolean - Se settato, effettua il deploy, altrimenti solo prova - Default: false
  * 
@@ -35,13 +35,13 @@ gulp.task( 'config', function() {
   // Recupera le opzioni
   var options = minimist( process.argv.slice( 2 ) );
 
-  // Se non specificato l'env viene settato su develop
+  // Se non specificato l'env viene settato su staging
   env = undefined == options.env ? 'staging' : options.env;
 
   // Se non specificato il branch viene settato su develop
   branch = undefined == options.branch ? 'develop' : options.branch;
 
-  if( env == 'production' && branch != 'master' ) {
+  if( env == 'prod' && branch != 'master' ) {
     throw "NON PUOI DEPLOYARE IN PRODUZIONE DA QUESTO BRANCH!\nenv = " + env + "\nbranch = " + branch;
   }
 
@@ -54,14 +54,11 @@ gulp.task( 'config', function() {
   // Di default il disco di destinazione è settato su quello di dev
   // Non è un'opzione modificabile
   path = '/home/cdf/gitProjects/deploy/dev/';
-
-  // Copia i settings in .env per il deploy in dev
-  fs.createReadStream('.env.staging').pipe( fs.createWriteStream('.env') );
   
-  if( env == "production" ) {
+  // Se deployiamo in prod, sovvrascriviamo queste variabili
+  if( env == "prod" ) {
     branch = 'master';
     path = '/home/cdf/gitProjects/deploy/prod/';
-    fs.createReadStream('.env.prod').pipe( fs.createWriteStream('.env') );
   }
 
   if( debug ) {
@@ -121,14 +118,14 @@ gulp.task( 'cssmin', ['sass'], function() {
   }
 
   // Aggiungere prefix
-  // Only minify and rename in production env
+  // Only minify and rename in prod env
   return gulp.src( 'source/css/*.css' )
-    .pipe(gulpif( env == "production", minify() ))
-    .pipe(gulpif( env == "production", rename(function (path) {
+    .pipe(minify())
+    .pipe(rename(function (path) {
       path.dirname += "";
       path.basename += ".min";
       path.extname = ".css"
-    })))
+    }))
     .pipe(gulp.dest('public/css/'));
 });
 
@@ -141,14 +138,21 @@ gulp.task( 'jsmin', ['clean'], function() {
   }
 
   // Aggiungere prefix
-  // Only concat and uglify in production env
+  // Only concat and uglify in prod env
   return gulp.src( 'source/js/*.js' )
-    .pipe(gulpif( env == "production", concat( "js.min.js" ) ))
-    .pipe(gulpif( env == "production", uglify() ))
+    .pipe(concat( "js.min.js" ))
+    .pipe(uglify())
     .pipe(gulp.dest('public/js/'));
 });
 
 gulp.task('sync', ['compile'], function() {
+
+  if( debug ) {
+    console.log( "Task sync: creato file .env." + env );
+  }
+
+  // Copia i settings dentro .env per il deploy in base all'env
+  fs.createReadStream('.env.' + env).pipe( fs.createWriteStream('.env') );
 
   var file = fs.readFileSync('rsync-excludelist', "utf8");
   var arr = file.split("\n");
@@ -157,16 +161,20 @@ gulp.task('sync', ['compile'], function() {
     console.log( "Task sync: arr = " + arr );
   }
 
-  gulp.src( process.cwd() )
-    .pipe( gulpif( nodry , rsync( {
+  if( nodry ) {
+    // Cancella tutto il contenuto della cartella public/
+    return del([ path + "public/" ]);
+
+    gulp.src( process.cwd() )
+      .pipe( rsync( {
         recursive: true,
         destination: path,
         progress: true,
         incremental: true,
         exclude: arr
       } )
-    )
-  );
+    );
+  }
 
 });
 
@@ -176,5 +184,5 @@ gulp.task( 'compile', [ 'check', 'clean', 'sass', 'cssmin', 'jsmin' ] );
 gulp.task( 'deploy', [ 'compile', 'sync' ] );
 
 // TODO
-// bower-installer
+// bower-installer: quando ?
 
