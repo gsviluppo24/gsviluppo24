@@ -1,11 +1,3 @@
-// CONTROLLI DA EFFETTUARE:
-// Verifica dell'hostname della macchina
-// Se deploiamo in dev può tirare giù da git da qualsiasi branch, invece per prod deve tirare giù unicamente da master
-// Prima di iniziare i task tirerà giù il git automaticamente
-// In base al branch varia anche il disco di destinazione che è deciso staticamente
-// Aggiungere anche l'opzione --dryrun per la conferma del deploy, settato di default a true. Impostando il valore su false deploiera effettivamente i file verso il disco di destinazione
-
-
 var gulp = require('gulp');
 var os   = require('os');
 var gulpif = require('gulp-if');
@@ -20,11 +12,6 @@ var rename = require('gulp-rename');
 var sass = require('gulp-sass');
 
 
-// VARIABILI DA SETTARE:
-// hostname: nome della macchina ponte - Se non corrisponde lo script si ferma
-// env: ambiente verso il quale si deploia ( deciderà staticamente l'url del disco di destinazione, nonché i branch dai quali è permesso tirare giù il git ). In poche parole se deploiamo in prod dovrà essere necessariamente tirato giù da git. Se deploiamo in dev potrà essere qualsiasi branch ( se non specifica, di default sarà develop )
-
-
 var knownOptions = {
   string: 'env',
   default: { env: process.env.NODE_ENV || 'develop' }
@@ -33,10 +20,6 @@ var knownOptions = {
 // Crea un array unico
 // TODO: capire come funziona di preciso
 var options = minimist( process.argv.slice( 2 ), knownOptions );
-
-
-
-
 
 
 // Sets the current env and sets the main variables
@@ -76,11 +59,11 @@ gulp.task( 'config', function() {
     // fs.createReadStream('.env.prod').pipe( fs.createWriteStream('.env') );
   }
 
-  console.log( "hostname = " + hostname );
-  console.log( "env = " + env );
-  console.log( "branch = " + branch );
-  console.log( "url = " + url );
-  console.log( "dryrun = " + dryrun );
+  // console.log( "hostname = " + hostname );
+  // console.log( "env = " + env );
+  // console.log( "branch = " + branch );
+  // console.log( "url = " + url );
+  // console.log( "dryrun = " + dryrun );
 });
 
 
@@ -88,9 +71,12 @@ gulp.task( 'config', function() {
 // Depends on config
 gulp.task('git-pull', ['config'], function() {
 
-  console.log( "branch = " + branch );
+  // console.log( "branch = " + branch );
 
-  // checkout!
+  // checkout: verificare sintassi
+  git.checkout('origin', branch, function (err) {
+    if (err) throw err;
+  });
 
   git.pull('origin', branch, {}, function (err) {
     if (err) throw err;
