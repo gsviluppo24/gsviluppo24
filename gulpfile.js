@@ -27,9 +27,9 @@ var sass = require('gulp-sass');
 gulp.task( 'config', function() {
 
   var hostname = os.hostname();
-  if( hostname != 'TRLIVEBUILDER' ) {
-    throw "NON SEI SULLA MACCHINA PONTE!\nhostname = " + hostname;
-  }
+  // if( hostname != 'TRLIVEBUILDER' ) {
+  //   throw "NON SEI SULLA MACCHINA PONTE!\nhostname = " + hostname;
+  // }
   
   // Recupera le opzioni
   var options = minimist( process.argv.slice( 2 ) );
@@ -72,7 +72,6 @@ gulp.task( 'config', function() {
   }
 });
 
-
 // Pulls the git down
 // Depends on config
 gulp.task('git-pull', ['config'], function() {
@@ -91,15 +90,11 @@ gulp.task('git-pull', ['config'], function() {
   });
 });
 
-
-
-
 // Clean the css dist folder
 // Depends on config
 gulp.task( 'clean', ['config'], function () {
   return del([ 'css/*']);
 });
-
 
 // Minify all css and copy them to dist folder
 // Depends on clean
@@ -126,12 +121,11 @@ gulp.task('sync', function() {
   gulp.src( process.cwd() )
     .pipe( gulpif( nodry , rsync( {
         recursive: true,
-        // destination: path,
-        destination: '../deploy/',
+        destination: path,
         progress: true,
         incremental: true,
         exclude: arr
-      } ) 
+      } )
     )
   );
 
