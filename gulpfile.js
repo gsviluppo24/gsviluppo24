@@ -8,7 +8,6 @@
  * 
  * @author Cyril Dally
  * @data: 2015-09-23
- * 
  */
 
 var gulp = require('gulp');
@@ -28,10 +27,9 @@ var sass = require('gulp-sass');
 gulp.task( 'config', function() {
 
   var hostname = os.hostname();
-  // if( hostname != 'TRLIVEBUILDER' ) {
-  //   console.log( "NON SEI SULLA MACCHINA PONTE!\nhostname = " + hostname);
-  //   return false;
-  // }
+  if( hostname != 'TRLIVEBUILDER' ) {
+    throw "NON SEI SULLA MACCHINA PONTE!\nhostname = " + hostname;
+  }
   
   // Recupera le opzioni
   var options = minimist( process.argv.slice( 2 ) );
@@ -43,8 +41,7 @@ gulp.task( 'config', function() {
   branch = undefined == options.branch ? 'develop' : options.branch;
 
   if( env == 'production' && branch != 'master' ) {
-    console.log( "NON PUOI DEPLOIARE IN PRODUZIONE DA QUESTO BRANCH!\nenv = " + env + "\nbranch = " + branch);
-    return false;
+    throw "NON PUOI DEPLOIARE IN PRODUZIONE DA QUESTO BRANCH!\nenv = " + env + "\nbranch = " + branch;
   }
 
   // Se non specificato il debug viene settato su false
