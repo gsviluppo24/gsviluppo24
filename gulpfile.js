@@ -2,9 +2,9 @@
  * Opzioni disponibili:
  *
  * --env: string - Definisce l'ambiente di deploy - Default: staging
- * -- branch: string - Definisce il branch di git - Default: develop
- * -- dryrun: boolean - Se settato su false, effettua il deploy, altrimenti solo prova - Default: true
- * -- debug: boolean - Se settato su true, la console stamperà degli elementi di controllo -  Default: false
+ * --branch: string - Definisce il branch di git - Default: develop
+ * --debug: boolean - Se settato, la console stamperà degli elementi di controllo -  Default: false
+ * --nodry: boolean - Se settato, effettua il deploy, altrimenti solo prova - Default: false
  * 
  * @author Cyril Dally
  * @data: 2015-09-23
@@ -24,17 +24,6 @@ var git = require('gulp-git');
 var rename = require('gulp-rename');
 var sass = require('gulp-sass');
 
-
-var knownOptions = {
-  string: 'env',
-  default: { env: process.env.NODE_ENV || 'staging' }
-};
-
-// Crea un array unico
-// TODO: capire come funziona di preciso
-var options = minimist( process.argv.slice( 2 ), knownOptions );
-
-
 // Sets the current env and sets the main variables
 gulp.task( 'config', function() {
 
@@ -43,6 +32,9 @@ gulp.task( 'config', function() {
   //   console.log( "NON SEI SULLA MACCHINA PONTE!\nhostname = " + hostname);
   //   return false;
   // }
+  
+  // Recupera le opzioni
+  var options = minimist( process.argv.slice( 2 ) );
 
   // Se non specificato l'env viene settato su develop
   env = undefined == options.env ? 'staging' : options.env;
@@ -55,31 +47,31 @@ gulp.task( 'config', function() {
     return false;
   }
 
-  // Se non specificato il dryrun viene settato su false
-  dryrun = undefined == options.dryrun ? true : options.dryrun;
-
   // Se non specificato il debug viene settato su false
-  debug = undefined == options.debug ? false : options.debug;
+  debug = undefined == options.debug ? false : true;
+
+  // Se non specificato il nodry viene settato su false
+  nodry = undefined == options.nodry ? false : true;
 
   // Di default il disco di destinazione è settato su quello di dev
   // Non è un'opzione modificabile
-  url = 'disco/di/sviluppo/htdocs/';
+  path = 'disco/di/sviluppo/htdocs/';
   
   if( env == "production" ) {
 
     branch = 'master';
-    url = 'disco/di/produzione/htdocs/';
+    path = 'disco/di/produzione/htdocs/';
 
-    // Questo genera un errore: permessi ?
-    // fs.createReadStream('.env.prod').pipe( fs.createWriteStream('.env') );
+    // Prende le config di prod e crea il file di config .env da deploiare sul server di prod
+    fs.createReadStream('.env.prod').pipe( fs.createWriteStream('.env') ); 
   }
 
   if( debug ) {
     console.log( "Task config: hostname = " + hostname );
     console.log( "Task config: env = " + env );
     console.log( "Task config: branch = " + branch );
-    console.log( "Task config: url = " + url );
-    console.log( "Task config: dryrun = " + dryrun );
+    console.log( "Task config: path = " + path );
+    console.log( "Task config: nodry = " + nodry );
   }
 });
 
@@ -135,9 +127,10 @@ gulp.task('sync', function() {
   }
 
   gulp.src( process.cwd() )
-    .pipe( gulpif( dryrun === false, rsync( {
+    .pipe( gulpif( nodry , rsync( {
         recursive: true,
-        destination: '../rsync-test/suncharts',
+        // destination: path,
+        destination: '../deploy/',
         progress: true,
         incremental: true,
         exclude: arr
@@ -150,4 +143,4 @@ gulp.task('sync', function() {
 // Defines the tasks
 gulp.task( 'check', [ 'config', 'git-pull' ] );
 gulp.task( 'compile', [ 'check', 'clean', 'cssmin' ] );
-gulp.task( 'deploy', [ 'deploy', 'sync' ] );
+gulp.task( 'deploy', [ 'compile', 'sync' ] );
