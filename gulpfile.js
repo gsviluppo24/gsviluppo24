@@ -11,10 +11,11 @@
  */
 
 var gulp = require('gulp');
-var os   = require('os');
+var os = require('os');
 var gulpif = require('gulp-if');
 var uglify = require('gulp-uglify');
-var minifyCss = require('gulp-minify-css');
+var concat = require('gulp-concat');
+var minify = require('gulp-minify-css');
 var minimist = require('minimist');
 var del = require('del');
 var fs = require('fs');
@@ -27,9 +28,9 @@ var sass = require('gulp-sass');
 gulp.task( 'config', function() {
 
   var hostname = os.hostname();
-  // if( hostname != 'TRLIVEBUILDER' ) {
-  //   throw "NON SEI SULLA MACCHINA PONTE!\nhostname = " + hostname;
-  // }
+  if( hostname != 'cdf-pc' ) {
+    throw "NON SEI SULLA MACCHINA PONTE!\nhostname = " + hostname;
+  }
   
   // Recupera le opzioni
   var options = minimist( process.argv.slice( 2 ) );
@@ -41,7 +42,7 @@ gulp.task( 'config', function() {
   branch = undefined == options.branch ? 'develop' : options.branch;
 
   if( env == 'production' && branch != 'master' ) {
-    throw "NON PUOI DEPLOIARE IN PRODUZIONE DA QUESTO BRANCH!\nenv = " + env + "\nbranch = " + branch;
+    throw "NON PUOI DEPLOYARE IN PRODUZIONE DA QUESTO BRANCH!\nenv = " + env + "\nbranch = " + branch;
   }
 
   // Se non specificato il debug viene settato su false
@@ -52,15 +53,15 @@ gulp.task( 'config', function() {
 
   // Di default il disco di destinazione è settato su quello di dev
   // Non è un'opzione modificabile
-  path = 'disco/di/sviluppo/htdocs/';
+  path = '/home/cdf/gitProjects/deploy/dev/';
+
+  // Copia i settings in .env per il deploy in dev
+  fs.createReadStream('.env.staging').pipe( fs.createWriteStream('.env') );
   
   if( env == "production" ) {
-
     branch = 'master';
-    path = 'disco/di/produzione/htdocs/';
-
-    // Prende le config di prod e crea il file di config .env da deploiare sul server di prod
-    fs.createReadStream('.env.prod').pipe( fs.createWriteStream('.env') ); 
+    path = '/home/cdf/gitProjects/deploy/prod/';
+    fs.createReadStream('.env.prod').pipe( fs.createWriteStream('.env') );
   }
 
   if( debug ) {
@@ -74,10 +75,10 @@ gulp.task( 'config', function() {
 
 // Pulls the git down
 // Depends on config
-gulp.task('git-pull', ['config'], function() {
+gulp.task('git', ['config'], function() {
 
   if( debug ) {
-    console.log( "Task git-pull: branch = " + branch );
+    console.log( "Task git: branch = " + branch );
   }
 
   // checkout: verificare sintassi
@@ -90,26 +91,64 @@ gulp.task('git-pull', ['config'], function() {
   });
 });
 
-// Clean the css dist folder
-// Depends on config
-gulp.task( 'clean', ['config'], function () {
-  return del([ 'css/*']);
+// Clean the css and js dist folder
+// Depends on check
+gulp.task( 'clean', ['check'], function () {
+  return del([ 'source/css/*', 'public/css/*', 'public/js/*' ]);
+});
+
+// Compile the css from sass
+// Depends on clean
+gulp.task( 'sass', ['clean'], function() {
+
+  if( debug ) {
+    console.log( "Task sass: env = " + env );
+  }
+
+  'use strict';
+
+  return gulp.src('source/sass/**/*.scss')
+    .pipe(sass().on('error', sass.logError))
+    .pipe(gulp.dest('source/css'));
 });
 
 // Minify all css and copy them to dist folder
-// Depends on clean
-gulp.task( 'cssmin', ['clean'], function() {
+// Depends on sass
+gulp.task( 'cssmin', ['sass'], function() {
 
   if( debug ) {
     console.log( "Task cssmin: env = " + env );
   }
 
+  // Aggiungere prefix
+  // Only minify and rename in production env
   return gulp.src( 'source/css/*.css' )
-    .pipe(gulpif( env == "production", minifyCss() )) // only minify in production
-    .pipe(gulp.dest('css'));
+    .pipe(gulpif( env == "production", minify() ))
+    .pipe(gulpif( env == "production", rename(function (path) {
+      path.dirname += "";
+      path.basename += ".min";
+      path.extname = ".css"
+    })))
+    .pipe(gulp.dest('public/css/'));
 });
 
-gulp.task('sync', function() {
+// Uglify all js and copy them to dist folder
+// Depends on clean
+gulp.task( 'jsmin', ['clean'], function() {
+
+  if( debug ) {
+    console.log( "Task jsmin: env = " + env );
+  }
+
+  // Aggiungere prefix
+  // Only concat and uglify in production env
+  return gulp.src( 'source/js/*.js' )
+    .pipe(gulpif( env == "production", concat( "js.min.js" ) ))
+    .pipe(gulpif( env == "production", uglify() ))
+    .pipe(gulp.dest('public/js/'));
+});
+
+gulp.task('sync', ['compile'], function() {
 
   var file = fs.readFileSync('rsync-excludelist', "utf8");
   var arr = file.split("\n");
@@ -132,6 +171,10 @@ gulp.task('sync', function() {
 });
 
 // Defines the tasks
-gulp.task( 'check', [ 'config', 'git-pull' ] );
-gulp.task( 'compile', [ 'check', 'clean', 'cssmin' ] );
+gulp.task( 'check', [ 'config', 'git' ] );
+gulp.task( 'compile', [ 'check', 'clean', 'sass', 'cssmin', 'jsmin' ] );
 gulp.task( 'deploy', [ 'compile', 'sync' ] );
+
+// TODO
+// bower-installer
+
