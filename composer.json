@@ -1,0 +1,44 @@
+{
+	"name": "gsviluppo24",
+	"description": "Project starter Gulp",
+	"keywords": ["gulp", "project"],
+	"license": "MIT",
+	"require": {
+        "thujohn/twitter": "1.2.0",
+        "openlss/lib-array2xml": "dev-master"
+	},
+	"repositories": [],
+    "require-dev": {
+    },
+	"autoload": {
+		"classmap": [
+			"app/commands",
+			"app/controllers",
+			"app/models",
+            "app/core",
+            "app/proxies",
+            "app/services",
+            "app/utils",
+            "app/composers",
+			"app/database/migrations",
+			"app/database/seeds"
+		]
+	},
+	"scripts": {
+		"post-install-cmd": [
+			"php artisan clear-compiled",
+			"php artisan optimize"
+		],
+		"post-update-cmd": [
+			"php artisan clear-compiled",
+			"php artisan optimize"
+		],
+		"post-create-project-cmd": [
+			"php artisan key:generate"
+		]
+	},
+	"config": {
+		"preferred-install": "dist"
+	},
+	"minimum-stability": "stable"
+}

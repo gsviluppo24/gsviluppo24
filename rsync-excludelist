@@ -1,9 +1,13 @@
+bower_components/
 node_modules/
 source/
+vendor/
 .env.*
 .gitignore
 README
 *.sublime-*
+bower.json
+composer.json
 gulpfile.js
 package.json
 rsync-excludelist

@@ -23,6 +23,22 @@ var rsync = require('gulp-rsync');
 var git = require('gulp-git');
 var rename = require('gulp-rename');
 var sass = require('gulp-sass');
+var exec = require('gulp-exec');
+
+// Fist deploy: composer and bower dependencies need to be install first
+// Install tasks should only be done by the "macchina-ponte"
+gulp.task( 'install', function() {
+
+  var hostname = os.hostname();
+  if( hostname != 'cdf-pc' ) {
+    throw "NON SEI SULLA MACCHINA PONTE!\nhostname = " + hostname;
+  }
+
+  return gulp.src('/')
+    .pipe( exec('composer install') )
+    .pipe( exec('bower install') );
+  
+});
 
 // Sets the current env and sets the main variables
 gulp.task( 'config', function() {
@@ -179,10 +195,11 @@ gulp.task('sync', ['compile'], function() {
 });
 
 // Defines the tasks
+gulp.task( 'firstinstall', [ 'install'/*, 'config', 'git'*/ ] );
 gulp.task( 'check', [ 'config', 'git' ] );
 gulp.task( 'compile', [ 'check', 'clean', 'sass', 'cssmin', 'jsmin' ] );
 gulp.task( 'deploy', [ 'compile', 'sync' ] );
 
 // TODO
 // bower-installer: quando ?
-
+// composer ?

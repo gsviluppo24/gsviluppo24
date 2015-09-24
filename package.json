@@ -1,6 +1,6 @@
 {
   "name": "gsviluppo24",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Gulp configuration package.json file",
   "main": "gulpfile.js",
   "dependencies": {
@@ -15,7 +15,8 @@
     "gulp-sass": "^2.0.4",
     "gulp-rename": "^1.2.2",
     "gulp-uglify": "^1.4.1",
-    "gulp-concat": "^2.6.0"
+    "gulp-concat": "^2.6.0",
+    "gulp-exec": "^2.1.1"
   },
   "devDependencies": {},
   "scripts": {
@@ -25,8 +26,8 @@
     "type": "git",
     "url": "https://github.com/gsviluppo24/gsviluppo24.git"
   },
-  "author": "cyril dally",
-  "license": "ISC",
+  "author": "Cyril Dally",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/gsviluppo24/gsviluppo24/issues"
   }

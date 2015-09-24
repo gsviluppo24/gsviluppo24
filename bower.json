@@ -1,0 +1,37 @@
+{
+  "name": "gsviluppo24",
+  "version": "0.0.1",
+  "ignore": [
+    "bower_components/",
+    "node_modules/",
+    "sources/",
+    "vendor/",
+    ".env*",
+    ".gitignore",
+    "README",
+    "*.sublime*",
+    "bower.json",
+    "composer.json",
+    "gulpfile.js",
+    "package.json",
+    "**/.*"
+  ],
+  "dependencies": {
+    "jquery": "1.11.0",
+    "jquery.cookie": "~1.4.1",
+    "jquery.ui": "~1.11.2",
+    "knockout": "~3.2.0",
+    "knockout.dictionary": "*",
+    "html5shiv": "~3.7.2"
+  },
+  "authors": [
+    "Cyril Dally"
+  ],
+  "moduleType": [
+    "globals"
+  ],
+  "license": "MIT",
+  "resolutions": {
+    "jquery": "1.11.0"
+  }
+}
