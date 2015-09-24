@@ -25,26 +25,28 @@ var rename = require('gulp-rename');
 var sass = require('gulp-sass');
 var exec = require('gulp-exec');
 
+// var authHostname = "TRLIVEBUILDER";
+var authHostname = "cdf-pc";
+
 // Fist deploy: composer and bower dependencies need to be install first
 // Install tasks should only be done by the "macchina-ponte"
 gulp.task( 'install', function() {
 
   var hostname = os.hostname();
-  if( hostname != 'cdf-pc' ) {
+  if( hostname != authHostname ) {
     throw "NON SEI SULLA MACCHINA PONTE!\nhostname = " + hostname;
   }
 
   return gulp.src('/')
-    .pipe( exec('composer install') )
-    .pipe( exec('bower install') );
-  
+    .pipe( gulpif( fs.statSync('composer.json').isFile(), exec('composer install') ) )
+    .pipe( gulpif( fs.statSync('bower.json').isFile(), exec('bower install') ) );
 });
 
 // Sets the current env and sets the main variables
 gulp.task( 'config', function() {
 
   var hostname = os.hostname();
-  if( hostname != 'cdf-pc' ) {
+  if( hostname != authHostname ) {
     throw "NON SEI SULLA MACCHINA PONTE!\nhostname = " + hostname;
   }
   
@@ -179,7 +181,7 @@ gulp.task('sync', ['compile'], function() {
 
   if( nodry ) {
     // Cancella tutto il contenuto della cartella public/
-    return del([ path + "public/" ]);
+    // return del([ path + "public/" ]);
 
     gulp.src( process.cwd() )
       .pipe( rsync( {
@@ -187,7 +189,10 @@ gulp.task('sync', ['compile'], function() {
         destination: path,
         progress: true,
         incremental: true,
-        exclude: arr
+        exclude: arr,
+        emptyDirectories: true,
+        compress: true,
+        clean: true // !
       } )
     );
   }
