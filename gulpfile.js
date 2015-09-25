@@ -21,6 +21,7 @@ var rename = require('gulp-rename');
 var sass = require('gulp-sass');
 var exec = require('gulp-exec');
 var shell = require('gulp-shell');
+var mkdirp = require('mkdirp');
 
 
 /**
@@ -100,15 +101,15 @@ gulp.task( 'config', function() {
   // Non è un'opzione modificabile
   path = '/home/cdf/gitProjects/deploy/dev/';
 
-  var owner = 'pinco';
-  var group = 'pallino';
-  
+  owner = 'pinco';
+  group = 'pallino';
+
   // Se deployiamo in prod, sovvrascriviamo queste variabili
   if( env == "prod" ) {
     branch = 'master';
     path = '/home/cdf/gitProjects/deploy/prod/';
-    var owner = 'pinca';
-    var group = 'pallina';
+    owner = 'pinca';
+    group = 'pallina';
   }
 
   if( debug ) {
@@ -138,6 +139,9 @@ gulp.task('git', ['config'], function() {
   }
 
   // PRIMA DOVREBBE FARE UN RESET HEAD DI EVENTUALI COMMIT RIMASTI APPESI SULLA MACCHINA
+  // git.reset('HEAD', {args:'--hard'}, function (err) {
+  //   if (err) throw err;
+  // });
 
   git.checkout(branch, {}, function (err) {
     if (err) throw err;
@@ -276,6 +280,16 @@ gulp.task('sync', ['compile'], function() {
   }
 
   if( nodry ) {
+    if( !fs.existsSync(path) ) {
+      if( !mkdirp.sync( path, '0755') ) {
+        if (err) throw "CANNOT CREATE DIRECTORY: " + path;
+      }
+    }
+
+    if( debug ) {
+      console.log( "Task sync: path = " + path );
+    }
+
     gulp.src( process.cwd() )
       .pipe( rsync( {
         recursive: true,
@@ -287,11 +301,12 @@ gulp.task('sync', ['compile'], function() {
         compress: true,
         clean: true // Pulisce le cartelle di destinazione man mano che va avanti l'rsync
       } )
-    )
-    .pipe( shell.task([
+    );
+
+    shell.task([
       'cd ' + path,
       'chown -R ' + owner + ':' + group
-      ]) );
+      ]);
   }
 
 });

@@ -7,7 +7,7 @@ vendor/
 README
 *.sublime-*
 bower.json
-composer.json
+composer.*
 gulpfile.js
 package.json
 rsync-excludelist
