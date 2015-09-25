@@ -24,6 +24,7 @@ var git = require('gulp-git');
 var rename = require('gulp-rename');
 var sass = require('gulp-sass');
 var exec = require('gulp-exec');
+var shell = require('gulp-shell');
 
 // var authHostname = "TRLIVEBUILDER";
 var authHostname = "cdf-pc";
@@ -72,11 +73,16 @@ gulp.task( 'config', function() {
   // Di default il disco di destinazione è settato su quello di dev
   // Non è un'opzione modificabile
   path = '/home/cdf/gitProjects/deploy/dev/';
+
+  var owner = 'pinco';
+  var group = 'pallino';
   
   // Se deployiamo in prod, sovvrascriviamo queste variabili
   if( env == "prod" ) {
     branch = 'master';
     path = '/home/cdf/gitProjects/deploy/prod/';
+    var owner = 'pinca';
+    var group = 'pallina';
   }
 
   if( debug ) {
@@ -109,7 +115,7 @@ gulp.task('git', ['config'], function() {
 // Clean the css and js dist folder
 // Depends on check
 gulp.task( 'clean', ['check'], function () {
-  return del([ 'source/css/*', 'public/css/*', 'public/js/*' ]);
+  return del([ 'source/css/*', 'source/js/*' ]);
 });
 
 // Compile the css from sass
@@ -180,9 +186,6 @@ gulp.task('sync', ['compile'], function() {
   }
 
   if( nodry ) {
-    // Cancella tutto il contenuto della cartella public/
-    // return del([ path + "public/" ]);
-
     gulp.src( process.cwd() )
       .pipe( rsync( {
         recursive: true,
@@ -192,19 +195,19 @@ gulp.task('sync', ['compile'], function() {
         exclude: arr,
         emptyDirectories: true,
         compress: true,
-        clean: true // !
+        clean: true // Pulisce le cartelle di destinazione man mano che va avanti l'rsync
       } )
-    );
+    )
+    .pipe( shell.task([
+      'cd ' + path,
+      'chown -R ' + owner + ':' + group
+      ]) );
   }
 
 });
 
-// Defines the tasks
-gulp.task( 'firstinstall', [ 'install'/*, 'config', 'git'*/ ] );
+// Defined tasks
+gulp.task( 'firstinstall', [ 'install'/*, 'check', 'compile'*/ ] );
 gulp.task( 'check', [ 'config', 'git' ] );
 gulp.task( 'compile', [ 'check', 'clean', 'sass', 'cssmin', 'jsmin' ] );
 gulp.task( 'deploy', [ 'compile', 'sync' ] );
-
-// TODO
-// bower-installer: quando ?
-// composer ?
