@@ -138,10 +138,10 @@ gulp.task('git', ['config'], function() {
     console.log( "Task git: branch = " + branch );
   }
 
-  // PRIMA DOVREBBE FARE UN RESET HEAD DI EVENTUALI COMMIT RIMASTI APPESI SULLA MACCHINA
-  // git.reset('HEAD', {args:'--hard'}, function (err) {
-  //   if (err) throw err;
-  // });
+  PRIMA DOVREBBE FARE UN RESET HEAD DI EVENTUALI COMMIT RIMASTI APPESI SULLA MACCHINA
+  git.reset('HEAD', {args:'--hard'}, function (err) {
+    if (err) throw err;
+  });
 
   git.checkout(branch, {}, function (err) {
     if (err) throw err;
