@@ -101,15 +101,15 @@ gulp.task( 'config', function() {
   // Non è un'opzione modificabile
   path = '/home/cdf/gitProjects/deploy/dev/';
 
-  owner = 'pinco';
-  group = 'pallino';
+  owner = 'cdf';
+  group = 'cdf';
 
   // Se deployiamo in prod, sovvrascriviamo queste variabili
   if( env == "prod" ) {
     branch = 'master';
     path = '/home/cdf/gitProjects/deploy/prod/';
-    owner = 'pinca';
-    group = 'pallina';
+    owner = 'cdf';
+    group = 'cdf';
   }
 
   if( debug ) {
@@ -266,49 +266,41 @@ gulp.task('sync', ['compile'], function() {
   if( debug ) {
     console.log( "Task sync: creato file .env." + env );
   }
-
-  // Tutti i file/cartelle da NON deployare
-  var file = '';
-  var rsyncExcludeList = 'rsync-excludelist';
-  if( fs.existsSync(rsyncExcludeList) ){
-    file = fs.readFileSync(rsyncExcludeList, "utf8")
+  
+  var dryrun = " --dry-run";
+  if( nodry ) {
+    var dryrun = " ";
   }
-  var arr = file.split("\n");
 
   if( debug ) {
-    console.log( "Task sync: arr = " + arr );
+    console.log( "Task sync: dryrun = " + dryrun );
   }
 
-  if( nodry ) {
-    if( !fs.existsSync(path) ) {
-      if( !mkdirp.sync( path, '0755') ) {
-        if (err) throw "CANNOT CREATE DIRECTORY: " + path;
-      }
-    }
-
-    if( debug ) {
-      console.log( "Task sync: path = " + path );
-    }
-
-    gulp.src( process.cwd() )
-      .pipe( rsync( {
-        recursive: true,
-        destination: path,
-        progress: true,
-        incremental: true,
-        exclude: arr,
-        emptyDirectories: true,
-        compress: true,
-        clean: true // Pulisce le cartelle di destinazione man mano che va avanti l'rsync
-      } )
-    );
-
-    shell.task([
-      'cd ' + path,
-      'chown -R ' + owner + ':' + group
-      ]);
+  var file = " ";
+  var rsyncExcludeList = './rsync-excludelist';
+  if( fs.existsSync(rsyncExcludeList) ){
+    file = " --exclude-from '" + rsyncExcludeList + "'";
   }
 
+  if( debug ) {
+    console.log( "Task sync: file = " + file );
+  }
+
+  var options = {
+    continueOnError: false,         // default = false, true means don't emit error event 
+    pipeStdout: false,              // default = false, true means stdout is written to file.contents 
+    customTemplatingThing: "test"   // content passed to gutil.template() 
+  };
+
+  var reportOptions = {
+    err: true,                      // default = true, false means don't write err 
+    stderr: true,                   // default = true, false means don't write stderr 
+    stdout: true                    // default = true, false means don't write stdout 
+  }
+
+  gulp.src( process.cwd() )
+    .pipe(exec("sudo rsync ./public/ " + path + " -Cavz --delete --chown=" + owner + ":" + group + dryrun + file, options))
+    .pipe(exec.reporter(reportOptions));
 });
 
 // Defined tasks
