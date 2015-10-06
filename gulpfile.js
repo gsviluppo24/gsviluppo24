@@ -299,7 +299,7 @@ gulp.task('sync', ['compile'], function() {
   }
 
   gulp.src( process.cwd() )
-    .pipe(exec("sudo rsync ./public/ " + path + " -Cavz --delete --chown=" + owner + ":" + group + dryrun + file, options))
+    .pipe(exec("sudo rsync ./ " + path + " -Cavz --delete --chown=" + owner + ":" + group + dryrun + file, options))
     .pipe(exec.reporter(reportOptions));
 });
 
