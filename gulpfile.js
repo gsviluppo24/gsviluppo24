@@ -20,7 +20,6 @@ var git = require('gulp-git');
 var rename = require('gulp-rename');
 var sass = require('gulp-sass');
 var exec = require('gulp-exec');
-var shell = require('gulp-shell');
 var mkdirp = require('mkdirp');
 
 
